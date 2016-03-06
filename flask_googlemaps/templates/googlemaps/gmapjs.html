@@ -1,15 +1,27 @@
-<script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script>
+<script src="//maps.googleapis.com/maps/api/js" type="text/javascript"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular.min.js"></script>
+<style type="text/css">#{{gmap.identifier}} { {{gmap.style}} }</style>
 
-<style type="text/css">
-      #{{gmap.identifier}} { {{gmap.style}} }
-</style>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular.min.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=drawing"></script>
 <script type="text/javascript">
     function initialize_googleMap() {
+        {% if gmap.location %}
+            var geocoder = new google.maps.Geocoder();
+            geocoder.geocode({address: '{{ gmap.location }}'}, function (results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    create_map(results[0].geometry.location);
+                } else {
+                    alert('Geocode was not successful for the following reason: ' + status);
+                }
+            });
+        {% else %}
+            create_map(new google.maps.LatLng({{gmap.center.0}}, {{gmap.center.1}}));
+        {% endif %}
+    }
+
+    function create_map(center) {
         var googleMap = new google.maps.Map(
         document.getElementById('{{gmap.identifier}}'), {
-            center: new google.maps.LatLng({{gmap.center.0}}, {{gmap.center.1}}),
+            center: center,
             zoom: {{gmap.zoom}},
             mapTypeId: google.maps.MapTypeId.{{gmap.maptype}}
         });
@@ -20,14 +32,14 @@
 
         {% for marker in gmap.markers %}
             var marker_{{loop.counter}} = new google.maps.Marker({
-                position: new google.maps.LatLng({{marker.0}}, {{marker.1}}),
+                position: new google.maps.LatLng({{marker['lat']}}, {{marker['lng']}}),
                 map: googleMap,
-                title: '{{marker.2}}',
-                icon: '{{marker.3}}',
+                title: '{{marker['title']}}',
+                icon: '{{marker['icon']}}',
             });
 
             google.maps.event.addListener(marker_{{loop.counter}}, 'click', function() {
-                infoWindow.setContent('{{marker.4}}');
+                infoWindow.setContent(`{{marker['info']|safe}}`);
                 infoWindow.open(googleMap, this);
             });
             google.maps.event.addListener(marker_{{loop.counter}}, 'rightclick', function() {
@@ -129,30 +141,6 @@
           });
           drawingManager.setMap(googleMap);
         }
-
-        if (navigator.geolocation) {
-            var container = document.createElement('div');
-            var homeControl = new BuildHomeControl(container);
-
-            container.index = 1;
-            googleMap.controls[google.maps.ControlPosition.RIGHT_TOP].push(container);
-
-            google.maps.event.addDomListener(container, 'click', function() {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var coordinates = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                    googleMap.setCenter(coordinates);
-                });
-            });
-        }
-    }
-
-    function BuildHomeControl(container) {
-          container.style.padding = '2px';
-
-          var img = document.createElement('img');
-          img.title = 'Click to set the map to Home';
-          container.appendChild(img);
-          img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAB8klEQVR4Xu3XPWgTYRgA4Lug9QetFm1RqL8d0uIfSJwcOiiog4oi/oB0FAQRFxE6ODg6agehUMQiok62IO2iVmnXoIvNJEglSkstBYnWNOczHhnSpBfoYF54eLn7+N7vve+4uySMoihYyUjxfzfQaKDRwCpqjjAMm6U0W1gkT84j/bfmWibVsvBO6Qbn6YgNLfCJJwyo+avut8DiZ6VxbtPBHAUWKJLhAaMa7axrAwqekZ7RzmeucZAJPnKYXvIcZcicvVV1YLsqErvJEzFEa2zsOa9jx51kiRihaYn6Ve3ATbaRpcek6djYdXpiFzMpXeYHJziV6BbYxhbpAhH3LDBXtnuzzJSdy0l9BFxN1ACd7OALo1QbL/nDERexIUkDbQS0MKzYK1or7Fg7Yw6ekqKZTUkaKBGwnn2kWc1SEcVyKUkDU5T4xiEyfK/wRE3R7eAiRab5meRVPEmONPsVfxNUF6dZx3tzfi97B0wuSAOkuOv+rim759tDys9JtyjyuB5vwn6ydNNngbWxsRcgMNYmDbKHfhcwUZePkcIHpGF2McZ9xnlHyHFO0ksXI1xSez5pA/EmuqSHHCPgK1tJMU8bAY+4E1u8rp/jJukcV8iwkRIzvGVQvQ81/x5I8KNkM4vMqlNYVp3GHxNWNBoNNBr4B2Hh6BuKnV6nAAAAAElFTkSuQmCC';
     }
 
     google.maps.event.addDomListener(window, 'load', initialize_googleMap);

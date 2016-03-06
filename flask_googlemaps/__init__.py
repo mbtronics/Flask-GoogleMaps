@@ -4,16 +4,21 @@ from flask import render_template, Blueprint, Markup
 
 
 class Map(object):
-    def __init__(self, identifier, lat, lng,
+    def __init__(self, identifier, lat=None, lng=None,
                  zoom=13, maptype="ROADMAP", markers=None,
                  varname='map',
+                 location=None,
                  style="height:300px;width:300px;margin:0;",
                  cls="map", polylines=None, polygons=None,
                  circles=None, rectangles=None, drawing=False):
         self.cls = cls
         self.style = style
         self.varname = varname
-        self.center = (lat, lng)
+        if lat is not None and lng is not None:
+            self.center = (lat, lng)
+        else:
+            self.center = None
+        self.location = location or None
         self.zoom = zoom
         self.maptype = maptype
         self.markers = markers or []
@@ -37,7 +42,7 @@ class Map(object):
         self.polylines.append(polyline)
 
     def add_marker(self, lat, lng, title="", icon="", info=""):
-        self.markers.append((lat, lng, title, icon, info))
+        self.markers.append({'lat': lat, 'lng': lng, 'title': title, 'icon': icon, 'info': info})
 
     def render(self, *args, **kwargs):
         return render_template(*args, **kwargs)
