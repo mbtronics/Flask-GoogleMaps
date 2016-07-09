@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from flask import render_template, Blueprint, Markup
+from flask import render_template, Blueprint, Markup, current_app
 
 
 class Map(object):
@@ -49,7 +49,7 @@ class Map(object):
 
     @property
     def js(self):
-        return Markup(self.render('googlemaps/gmapjs.html', gmap=self))
+        return Markup(self.render('googlemaps/gmapjs.html', gmap=self, key=current_app.config['GOOGLEMAPS_KEY']))
 
     @property
     def html(self):
@@ -81,7 +81,7 @@ class GoogleMaps(object):
             self.init_app(app)
 
     def init_app(self, app):
-        app.config['GOOGLEMAPS_KEY'] = self.key
+        app.config['GOOGLEMAPS_KEY'] = self.key if self.key else app.config['GOOGLEMAPS_KEY']
         self.register_blueprint(app)
         app.add_template_filter(googlemap_html)
         app.add_template_filter(googlemap_js)
