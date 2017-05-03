@@ -30,23 +30,43 @@
             content: "loading..."
         });
 
+        var locations = [];
+        var icons = [];
+        var titles = [];
+        var infos = [];
+
         {% for marker in gmap.markers %}
-            var marker_{{loop.counter}} = new google.maps.Marker({
-                position: new google.maps.LatLng({{marker['lat']}}, {{marker['lng']}}),
-                map: googleMap,
-                title: '{{marker['title']}}',
-                icon: '{{marker['icon']}}',
-            });
-
-            google.maps.event.addListener(marker_{{loop.counter}}, 'click', function() {
-                infoWindow.setContent(`{{marker['info']|safe}}`);
-                infoWindow.open(googleMap, this);
-            });
-            google.maps.event.addListener(marker_{{loop.counter}}, 'rightclick', function() {
-
-                $(this).w2overlay('Hello');
-            });
+            locations.push({lat: {{ marker['lat'] }}, lng: {{ marker['lng'] }}});
+            icons.push('{{ marker['icon'] }}');
+            titles.push('{{ marker['title'] }}');
+            infos.push(`{{ marker['info']|safe }}`);
         {% endfor %}
+
+        var markers = locations.map(function(location, i) {
+              return new google.maps.Marker({
+                position: location,
+                title: titles[i],
+                icon: icons[i]
+              });
+        });
+
+        markers.forEach(function(marker, i) {
+            google.maps.event.addListener(marker, 'click', function() {
+                var temp = this;
+                $.ajax( {
+                    type: "POST",
+                    url: '{{ url_for('property.infobox') }}',
+                    data: infos[i],
+                    success: function(data) {
+                        infoWindow.setContent(data);
+                        infoWindow.open(googleMap, temp);
+                    }
+                });
+            });
+        });
+
+        var markerCluster = new MarkerClusterer(googleMap, markers,
+            {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});
 
         {% for polyline in gmap.polylines %}
             var polylineCoordinates = [];
