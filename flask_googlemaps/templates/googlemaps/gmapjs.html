@@ -39,7 +39,7 @@
             locations.push({lat: {{ marker['lat'] }}, lng: {{ marker['lng'] }}});
             icons.push('{{ marker['icon'] }}');
             titles.push('{{ marker['title'] }}');
-            infos.push(`{{ marker['info']|safe }}`);
+            infos.push('{{ marker['info'] }}');
         {% endfor %}
 
         var markers = locations.map(function(location, i) {
