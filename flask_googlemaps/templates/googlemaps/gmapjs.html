@@ -38,7 +38,7 @@
         {% for marker in gmap.markers %}
             locations.push({lat: {{ marker['lat'] }}, lng: {{ marker['lng'] }}});
             icons.push('{{ marker['icon'] }}');
-            titles.push('{{ marker['title'] }}');
+            titles.push('{{ marker['title'] | tojson }}');
             infos.push('{{ marker['info'] }}');
         {% endfor %}
 
