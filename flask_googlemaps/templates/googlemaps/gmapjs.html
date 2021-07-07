@@ -4,12 +4,11 @@
 <script type="text/javascript">
     function initialize_googleMap() {
         {% if gmap.location %}
-            var geocoder = new google.maps.Geocoder();
-            geocoder.geocode({address: '{{ gmap.location }}'}, function (results, status) {
-                if (status == google.maps.GeocoderStatus.OK) {
-                    create_map(results[0].geometry.location);
-                } else {
-                    alert('Geocode was not successful for the following reason: ' + status);
+            $.ajax({
+                url: '{{ url_for('geoservices.geocode') }}?q=' + '{{ gmap.location }}',
+            }).done(function (data) {
+                if (data['lng'] && data['lat']) {
+                    create_map(data);
                 }
             });
         {% else %}
